@@ -1,0 +1,37 @@
+[Desktop Entry]
+Type=Application
+Icon=@NAME@
+GenericName=Pandora Music Player
+X-GNOME-FullName[en_US]=Apollo for Pandora
+Comment=Listen to music on Pandora
+Comment[en_US]=Listen to music on Pandora
+Categories=GTK;GNOME;Music;AudioVideo;Audio;
+Exec=@EXEC_NAME@ %U
+Icon=@EXEC_NAME@
+Terminal=false
+X-GNOME-UsesNotifications=true
+Actions=pause;next;like;explain;
+
+# See https://man.archlinux.org/man/pianobar.1
+[Desktop Action pause]
+Name=Pause/Resume
+# echo -n 'p' > ~/.config/pianobar/ctl
+Exec=@EXEC_NAME@ --pause-resume
+
+[Desktop Action next]
+Name=Next
+Icon=media-skip-forward-symbolic
+# echo -n 'n' > ~/.config/pianobar/ctl
+Exec=@EXEC_NAME@ --skip-song
+
+[Desktop Action like]
+Name=Like this song
+Icon=emblem-favorite-symbolic
+# echo -n '+' > ~/.config/pianobar/ctl
+Exec=@EXEC_NAME@ --like-song
+
+[Desktop Action explain]
+Name=Explain this song
+Icon=edit-find-symbolic
+# echo -n 'e' > ~/.config/pianobar/ctl
+Exec=@EXEC_NAME@ --explain-song

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <enum id="viewmode">
+    <value value="0" nick="album"/>
+    <value value="1" nick="list"/>
+  </enum>
+  <enum id="@EXEC_NAME@.ZoomLevel">
+    <value value="3" nick="normal"/>
+    <value value="4" nick="large"/>
+    <value value="5" nick="larger"/>
+    <value value="6" nick="huge"/>
+    <value value="7" nick="huger"/>
+    <value value="8" nick="largest"/>
+  </enum>
+  <enum id="dateformatmode">
+    <value value="0" nick="iso"/>
+    <value value="1" nick="locale"/>
+    <value value="2" nick="informal"/>
+  </enum>
+  <enum id="windowstate">
+    <value value="0" nick="normal"/>
+    <value value="1" nick="tiled-start"/>
+    <value value="2" nick="tiled-end"/>
+  </enum>
+
+  <schema path="/@GSETTINGS_KEY@/preferences/" id="@EXEC_NAME@.preferences">
+    <key type="b" name="download-thumbnails">
+      <default>true</default>
+      <summary>Whether to download album art</summary>
+      <description>Whether to download album art</description>
+    </key>
+    <key type="b" name="show-sidebar">
+      <default>true</default>
+      <summary>Show the sidebar</summary>
+      <description>Show the sidebar</description>
+    </key>
+    <key name="date-format" enum="dateformatmode">
+      <default>'informal'</default>
+      <summary>Date Format</summary>
+      <description>The format of dates. Possible values are "locale", "iso", and "informal".</description>
+    </key>
+    <key name="default-viewmode" enum="viewmode">
+      <default>'icon'</default>
+      <summary>Default viewmode</summary>
+      <description>The default viewmode used when on startup</description>
+    </key>
+    <key type="b" name="sidebar-cat-stations-expander">
+      <default>true</default>
+      <summary>Stations category expander</summary>
+      <description>Expand/Collapse Stations category</description>
+    </key>
+    <key name="window-position" type="(ii)">
+      <default>(-1, -1)</default>
+      <summary>Window position</summary>
+      <description>Most recent window position (x, y)</description>
+    </key>
+    <key name="window-size" type="(ii)">
+      <default>(1000, 680)</default>
+      <summary>Most recent window size</summary>
+      <description>Most recent window size (width, height)</description>
+    </key>
+    <key name="window-state" enum="windowstate">
+      <default>'normal'</default>
+      <summary>Window state</summary>
+      <description>State of last closed window (Normal, tiled left, or tiled right).</description>
+    </key>
+    <key type="i" name="sidebar-width">
+      <default>191</default>
+      <summary>Width of the side pane</summary>
+      <description>The default width of the side pane on startup</description>
+    </key>
+    <key type="i" name="minimum-sidebar-width">
+      <default>96</default>
+      <summary>Minimum width of the side pane</summary>
+      <description>The minimum width of the side pane</description>
+    </key>
+    <key type="b" name="autostart">
+      <default>true</default>
+      <summary>Whether to play most recent the station on startup</summary>
+      <description>Whether to play most recent the station on startup</description>
+    </key>
+    <key type="s" name="autostart-station">
+      <default>''</default>
+      <summary>Most recent the station to play on startup</summary>
+      <description>Most recent the station to play on startup</description>
+    </key>
+    <key type="i" name="active-tab">
+      <default>0</default>
+      <summary>Which tab to activate on startup</summary>
+      <description>Which tab to activate on startup</description>
+    </key>
+  </schema>
+
+  <schema path="/@GSETTINGS_KEY@/album-view/" id="@EXEC_NAME@.album-view">
+    <key name="default-zoom-level" enum="@EXEC_NAME@.ZoomLevel">
+      <default>'large'</default>
+      <summary>Album default zoom level</summary>
+      <description>Default Zoom level used by the album view.</description>
+    </key>
+    <key name="zoom-level" enum="@EXEC_NAME@.ZoomLevel">
+      <default>'large'</default>
+      <summary>Album zoom level</summary>
+      <description>Zoom level used by the album view.</description>
+    </key>
+    <key name="minimum-zoom-level" enum="@EXEC_NAME@.ZoomLevel">
+      <default>'normal'</default>
+      <summary>Minimum album zoom level</summary>
+      <description>The minimum zoom level used by the album view.</description>
+    </key>
+    <key name="maximum-zoom-level" enum="@EXEC_NAME@.ZoomLevel">
+      <default>'largest'</default>
+      <summary>Maximum album zoom level</summary>
+      <description>The maximum zoom level used by the album view.</description>
+    </key>
+  </schema>
+
+  <schema path="/@GSETTINGS_KEY@/list-view/" id="@EXEC_NAME@.list-view">
+    <key name="default-zoom-level" enum="@EXEC_NAME@.ZoomLevel">
+      <default>'normal'</default>
+      <summary>icon default zoom level</summary>
+      <description>Default Zoom level used by the list view.</description>
+    </key>
+    <key name="zoom-level" enum="@EXEC_NAME@.ZoomLevel">
+      <default>'normal'</default>
+      <summary>icon zoom level</summary>
+      <description>Zoom level used by the list view.</description>
+    </key>
+    <key name="minimum-zoom-level" enum="@EXEC_NAME@.ZoomLevel">
+      <default>'normal'</default>
+      <summary>Minimum icon zoom level</summary>
+      <description>The minimum zoom level used by the list view.</description>
+    </key>
+    <key name="maximum-zoom-level" enum="@EXEC_NAME@.ZoomLevel">
+      <default>'huge'</default>
+      <summary>Maximum icon zoom level</summary>
+      <description>The maximum zoom level used by the list view.</description>
+    </key>
+  </schema>
+
+</schemalist>
