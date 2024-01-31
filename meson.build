@@ -52,7 +52,12 @@ subdir('po')
 
 exe = executable(
   package,
+  'src/NotificationManager.vala',
   'src/Application.vala',
+  'src/Utils/Search.vala',
+  'src/Utils/String.vala',
+  'src/Utils/TimeUtils.vala',
+  'src/Widgets/TopDisplay.vala',
   dependencies: deps,
   install: true
 )
