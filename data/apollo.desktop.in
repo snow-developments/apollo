@@ -10,7 +10,7 @@ Exec=@EXEC_NAME@ %U
 Icon=@EXEC_NAME@
 Terminal=false
 X-GNOME-UsesNotifications=true
-Actions=pause;next;like;explain;
+Actions=pause;skip;like;explain;
 
 # See https://man.archlinux.org/man/pianobar.1
 [Desktop Action pause]
@@ -18,8 +18,8 @@ Name=Pause/Resume
 # echo -n 'p' > ~/.config/pianobar/ctl
 Exec=@EXEC_NAME@ --pause-resume
 
-[Desktop Action next]
-Name=Next
+[Desktop Action skip]
+Name=Skip this song
 Icon=media-skip-forward-symbolic
 # echo -n 'n' > ~/.config/pianobar/ctl
 Exec=@EXEC_NAME@ --skip-song
