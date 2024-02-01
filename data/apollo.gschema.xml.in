@@ -40,7 +40,7 @@
       <description>The format of dates. Possible values are "locale", "iso", and "informal".</description>
     </key>
     <key name="default-viewmode" enum="viewmode">
-      <default>'icon'</default>
+      <default>'album'</default>
       <summary>Default viewmode</summary>
       <description>The default viewmode used when on startup</description>
     </key>
