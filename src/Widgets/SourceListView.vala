@@ -62,12 +62,9 @@ public class Apollo.StationsCategory : Granite.Widgets.SourceList.ExpandableItem
     station_menu.append (smart_station_new);
     station_menu.show_all ();
 
-    station_new.activate.connect (() => {
-      // TODO: App.main_window.create_new_playlist ();
-    });
-
+    station_new.activate.connect (() => App.create_new_station ());
     smart_station_new.activate.connect (() => {
-      // TODO: App.main_window.show_smart_station_dialog ();
+      // TODO: App.show_smart_station_dialog ();
     });
   }
 

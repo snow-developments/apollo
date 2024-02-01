@@ -4,15 +4,15 @@ namespace Pianobar {
   public struct Station {
     string id;
     string name;
-    Gee.List<Track?> history;
+    Gee.List<Track> history;
   }
 
-  public struct Track {
-    string title;
-    string artist;
-    string album;
-    bool liked;
-    bool liked_artist;
+  public class Track {
+    public virtual string title { get; set; }
+    public virtual string artist { get; set; }
+    public virtual string album { get; set; }
+    public virtual bool liked { get; set; }
+    public virtual bool liked_artist { get; set; }
 
     public static inline bool is_valid_string_field (string? text) {
       return !String.is_empty (text, true);
@@ -36,6 +36,18 @@ namespace Pianobar {
         return _("$NAME by $ARTIST on $ALBUM").replace ("$ARTIST", "<b>" + Markup.escape_text (artist) + "</b>").replace ("$NAME", "<b>" + Markup.escape_text (title) + "</b>").replace ("$ALBUM", "<b>" + Markup.escape_text (album) + "</b>");
       }
     }
+
+    public Track copy () {
+      var result = new Track ();
+
+      result.title = title;
+      result.artist = artist;
+      result.album = album;
+      result.liked = liked;
+      result.liked_artist = liked_artist;
+
+      return result;
+    }
   }
 
   public enum State {
@@ -54,7 +66,7 @@ namespace Pianobar {
     }
     public int64 position { get; private set; }
     public int64 duration { get; private set; }
-    public Gee.List<Station?> stations { get; private set; }
+    public Gee.TreeSet<Station?> stations { get; private set; }
 
     public signal void state_changed ();
     public signal void track_changed ();
@@ -62,10 +74,12 @@ namespace Pianobar {
 
     public Player () {
       state = State.stopped;
-      track = Track ();
+      track = null;
       position = 0;
       duration = 0;
-      stations = new Gee.ArrayList<Station?> ();
+      stations = new Gee.TreeSet<Station?> ((a, b) => {
+        return strcmp (a.name.collate_key (), b.name.collate_key ());
+      });
     }
 
     public void seek (int64 position) {}
@@ -297,7 +311,7 @@ namespace Apollo {
     }
 
     public static void create_new_station () {
-      // TODO: Create and show a station editor dialog
+      new Dialogs.StationEditor ().run ();
     }
 
     private void update_welcome () {
