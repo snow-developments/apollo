@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Icon=@NAME@
+Name=Apollo
 GenericName=Pandora Music Player
 X-GNOME-FullName[en_US]=Apollo for Pandora
 Comment=Listen to music on Pandora
