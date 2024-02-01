@@ -40,11 +40,22 @@ deps = [
 
 # Configuration
 config_data = configuration_data()
-config_data.set('version', meson.project_version())
-config_data.set('testdata_dir', join_paths(meson.project_source_root(), 'data', 'tests'))
-config_data.set('app_name', meson.project_name())
-config_data.set('gettext_package', package)
-config_data.set('locale_dir', join_paths(get_option('prefix'), get_option('localedir')))
+config_data.set('NAME', meson.project_name())
+config_data.set('EXEC_NAME', package)
+config_data.set('VERSION', meson.project_version())
+config_data.set('GETTEXT_PACKAGE', package)
+config_data.set('INSTALL_PREFIX', get_option('prefix'))
+config_data.set('BIN_DIR', join_paths(get_option('prefix'), get_option('bindir')))
+config_data.set('DATA_DIR', join_paths(get_option('prefix'), get_option('datadir')))
+config_data.set('LOCALE_DIR', join_paths(get_option('prefix'), get_option('localedir')))
+config_data.set('TEST_DATA_DIR', join_paths(meson.project_source_root(), 'data', 'tests'))
+config_data.set('GSETTINGS_KEY', package.replace('.', '/'))
+
+config_header = configure_file(
+  input: 'src/Constants.vala.in',
+  output: 'Constants.vala',
+  configuration : config_data
+)
 
 # Configure subdirectories
 subdir('data')
@@ -52,6 +63,7 @@ subdir('po')
 
 exe = executable(
   package,
+  config_header,
   'src/NotificationManager.vala',
   'src/Application.vala',
   'src/Utils/Search.vala',

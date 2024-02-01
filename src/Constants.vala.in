@@ -1,0 +1,10 @@
+namespace Constants {
+  public const string NAME = "@NAME@";
+  public const string EXEC_NAME = "@EXEC_NAME@";
+  public const string VERSION = "@VERSION@";
+  public const string GETTEXT_PACKAGE = "@GETTEXT_PACKAGE@";
+  public const string INSTALL_PREFIX = "@INSTALL_PREFIX@";
+  public const string BIN_DIR = "@BIN_DIR@";
+  public const string DATA_DIR = "@DATA_DIR@";
+  public const string LOCALE_DIR = "@LOCALE_DIR@";
+}
