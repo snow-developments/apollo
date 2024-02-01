@@ -287,11 +287,7 @@ namespace Apollo {
 
       update_welcome ();
 
-      var app = new Box (Orientation.VERTICAL, 0);
-      app.pack_start (header);
-      app.pack_end (view_stack);
-
-      main_window.add (app);
+      main_window.add (view_stack);
       main_window.show_all ();
     }
 
