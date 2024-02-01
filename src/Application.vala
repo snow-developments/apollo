@@ -1,10 +1,18 @@
 using Gtk;
 
 namespace Pianobar {
+  public struct Station {
+    string id;
+    string name;
+    Gee.List<Track?> history;
+  }
+
   public struct Track {
     string title;
     string artist;
     string album;
+    bool liked;
+    bool liked_artist;
 
     public static inline bool is_valid_string_field (string? text) {
       return !String.is_empty (text, true);
@@ -38,16 +46,7 @@ namespace Pianobar {
   }
 
   public class Player {
-    public signal void state_changed ();
-    public signal void track_changed ();
-    public signal void position_changed (int64 position);
-
-    public Player () {
-      state = State.stopped;
-      track = Track ();
-      duration = 0;
-    }
-
+    public bool authenticated { get; private set; default = false; }
     public State state { get; private set; }
     public Track track { get; private set; }
     public bool has_media {
@@ -55,6 +54,19 @@ namespace Pianobar {
     }
     public int64 position { get; private set; }
     public int64 duration { get; private set; }
+    public Gee.List<Station?> stations { get; private set; }
+
+    public signal void state_changed ();
+    public signal void track_changed ();
+    public signal void position_changed (int64 position);
+
+    public Player () {
+      state = State.stopped;
+      track = Track ();
+      position = 0;
+      duration = 0;
+      stations = new Gee.ArrayList<Station?> ();
+    }
 
     public void seek (int64 position) {}
   }
@@ -64,101 +76,249 @@ namespace Pianobar {
   class CommandPipe {}
 }
 
-public class Apollo.App : Gtk.Application {
-  public static Pianobar.Player player { get; private set; }
-  public signal void play_pause_changed ();
+namespace Apollo {
+  public GLib.Settings saved_state;
+  public GLib.Settings settings;
+  public GLib.Settings album_view_settings;
+  public GLib.Settings list_view_settings;
 
-  // private SourceListView source_list_view;
-  // private ViewStack view_stack;
-  // private Widgets.ViewSelector view_selector;
-  private TopDisplay top_display;
-  private SearchEntry search_entry;
-  private bool search_field_has_focus { get; set; default = true; }
+  public class App : Gtk.Application {
+    public static ApplicationWindow main_window { get; private set; }
+    public static Pianobar.Player player { get; private set; }
+    public signal void play_pause_changed ();
 
-  public const string ACTION_PREFIX = "win.";
-  public const string ACTION_PLAY = "action_play";
-  public const string ACTION_PLAY_NEXT = "action_play_next";
-  public const string ACTION_LIKE = "action_like";
-  public const string ACTION_EXPLAIN = "action_explain";
-  public const string ACTION_QUIT = "action_quit";
-  public const string ACTION_SEARCH = "action_search";
-  public const string ACTION_VIEW_ALBUMS = "action_view_albums";
-  public const string ACTION_VIEW_LIST = "action_view_list";
+    private Stack view_stack;
+    private Widgets.SourceListView source_list_view;
+    private Widgets.StatusBar statusbar;
+    // private Widgets.ViewSelector view_selector;
+    private Widgets.TopDisplay top_display;
+    private SearchEntry search_entry;
+    private bool search_field_has_focus { get; set; default = true; }
+    private Granite.Widgets.Welcome welcome;
 
-  public App () {
-    Object (
-      application_id: "llc.snow.apollo",
-      flags: ApplicationFlags.FLAGS_NONE
-    );
+    public const string ACTION_PREFIX = "win.";
+    public const string ACTION_PLAY = "action_play";
+    public const string ACTION_PLAY_NEXT = "action_play_next";
+    public const string ACTION_LIKE = "action_like";
+    public const string ACTION_EXPLAIN = "action_explain";
+    public const string ACTION_QUIT = "action_quit";
+    public const string ACTION_SEARCH = "action_search";
+    public const string ACTION_VIEW_ALBUMS = "action_view_albums";
+    public const string ACTION_VIEW_LIST = "action_view_list";
 
-    player = new Pianobar.Player ();
-  }
+    public App () {
+      Object (
+        application_id: "llc.snow.apollo",
+        flags: ApplicationFlags.FLAGS_NONE
+      );
 
-  protected override void activate () {
-    var main_window = new ApplicationWindow (this);
-    main_window.default_width = 640;
-    main_window.default_height = 480;
+      player = new Pianobar.Player ();
+    }
 
-    var header = new HeaderBar () { show_close_button = true };
-    main_window.set_titlebar(header);
+    static construct {
+      // Init settings
+      saved_state = new GLib.Settings (Constants.EXEC_NAME + ".saved-state");
+      settings = new GLib.Settings (Constants.EXEC_NAME + ".preferences");
+      album_view_settings = new GLib.Settings (Constants.EXEC_NAME + ".album-view");
+      list_view_settings = new GLib.Settings (Constants.EXEC_NAME + ".list-view");
+    }
 
-    top_display = new TopDisplay () {
-      visible_child_name = "time",
-      margin_start = 30,
-      margin_end = 30
-    };
-    // top_display.visible = player.state != Pianobar.State.stopped;
-    // sensitive = player.state != Pianobar.State.buffering;
+    protected override void activate () {
+      main_window = new ApplicationWindow (this);
+      main_window.default_width = 640;
+      main_window.default_height = 480;
 
-    var preferences_menuitem = new Gtk.MenuItem.with_label (_("Preferences"));
-    // TODO: preferences_menuitem.activate.connect (edit_preferences_click);
+      var header = new HeaderBar () { show_close_button = true };
+      main_window.set_titlebar(header);
 
-    var menu = new Gtk.Menu ();
-    menu.append (preferences_menuitem);
-    menu.show_all ();
+      var view_selector = new Widgets.ViewSelector () {
+        margin_start = 12,
+        margin_end = 6,
+        valign = Align.CENTER
+      };
+      // TODO: view_selector.selected = (Widgets.ViewSelector.Mode) App.saved_state.get_int ("view-mode");
 
-    var menu_button = new MenuButton ();
-    menu_button.image = new Image.from_icon_name ("open-menu", IconSize.LARGE_TOOLBAR);
-    menu_button.popup = menu;
-    menu_button.valign = Align.CENTER;
+      var play_button = new Button.from_icon_name ("media-playback-start-symbolic", IconSize.LARGE_TOOLBAR) {
+        action_name = ACTION_PREFIX + ACTION_PLAY,
+        tooltip_text = _("Play"),
+        margin_start = 12
+      };
+      action_state_changed.connect ((name, new_state) => {
+        if (name == ACTION_PLAY) {
+          if (new_state.get_boolean () == false) {
+            play_button.image = new Gtk.Image.from_icon_name ("media-playback-start-symbolic", Gtk.IconSize.LARGE_TOOLBAR);
+            play_button.tooltip_text = _("Play");
+          } else {
+            play_button.image = new Gtk.Image.from_icon_name ("media-playback-pause-symbolic", Gtk.IconSize.LARGE_TOOLBAR);
+            play_button.tooltip_text = _("Pause");
+          }
+        }
+      });
+      var next_button = new Button.from_icon_name ("media-skip-forward-symbolic", IconSize.LARGE_TOOLBAR) {
+        action_name = ACTION_PREFIX + ACTION_PLAY_NEXT,
+        tooltip_text = _("Skip this song")
+      };
 
-    var play_button = new Gtk.Button.from_icon_name ("media-playback-start-symbolic", Gtk.IconSize.LARGE_TOOLBAR) {
-      action_name = ACTION_PREFIX + ACTION_PLAY,
-      tooltip_text = _("Play")
-    };
-    var next_button = new Gtk.Button.from_icon_name ("media-skip-forward-symbolic", Gtk.IconSize.LARGE_TOOLBAR) {
-      action_name = ACTION_PREFIX + ACTION_PLAY_NEXT,
-      tooltip_text = _("Skip this song")
-    };
+      top_display = new Widgets.TopDisplay () {
+        visible_child_name = "time",
+        margin_start = 30,
+        margin_end = 30
+      };
+      // top_display.visible = player.state != Pianobar.State.stopped;
+      // sensitive = player.state != Pianobar.State.buffering;
 
-    var like_button = new Gtk.Button.from_icon_name ("emblem-favorite-symbolic", Gtk.IconSize.SMALL_TOOLBAR) {
-      action_name = ACTION_PREFIX + ACTION_LIKE,
-      tooltip_text = _("Like this song")
-    };
-    var explain_button = new Gtk.Button.from_icon_name ("dialog-question-symbolic", Gtk.IconSize.SMALL_TOOLBAR) {
-      action_name = ACTION_PREFIX + ACTION_EXPLAIN,
-      tooltip_text = _("Explain this song")
-    };
+      var preferences_menuitem = new Gtk.MenuItem.with_label (_("Preferences"));
+      // TODO: preferences_menuitem.activate.connect (edit_preferences_click);
 
-    search_entry = new SearchEntry () {
-      valign = Align.CENTER,
-      placeholder_text = _("Search Stations")
-    };
+      var menu = new Gtk.Menu ();
+      menu.append (preferences_menuitem);
+      menu.show_all ();
 
-    header.pack_start (play_button);
-    header.pack_start (next_button);
-    header.pack_start (like_button);
-    header.pack_start (explain_button);
-    header.set_title (_("Apollo"));
-    header.set_custom_title (top_display);
-    header.pack_end (menu_button);
-    header.pack_end (search_entry);
+      var menu_button = new MenuButton ();
+      menu_button.image = new Image.from_icon_name ("open-menu", IconSize.LARGE_TOOLBAR);
+      menu_button.popup = menu;
+      menu_button.valign = Align.CENTER;
 
-    main_window.show_all ();
-  }
+      search_entry = new SearchEntry () {
+        valign = Align.CENTER,
+        placeholder_text = _("Search Stations")
+      };
 
-  public static int main (string[] args) {
-    stdout.printf ("Sing it, Apollo!\n");
-    return new App ().run (args);
+      header.pack_start (play_button);
+      header.pack_start (next_button);
+      header.pack_start (view_selector);
+      header.set_title (_("Apollo"));
+      header.set_custom_title (top_display);
+      header.pack_end (menu_button);
+      header.pack_end (search_entry);
+
+      view_stack = new Stack () {
+        transition_type = Gtk.StackTransitionType.CROSSFADE
+      };
+
+      var login = new Grid () {
+        halign = Align.CENTER,
+        valign = Align.CENTER,
+        row_spacing = 8
+      };
+
+      Entry username = new Entry () {
+        activates_default = true,
+        placeholder_text = _("user@example.com")
+      };
+      Entry password = new Entry () {
+        activates_default = true,
+        primary_icon_name = "dialog-password-symbolic",
+        primary_icon_tooltip_text = _("Password"),
+        visibility = false,
+        input_purpose = InputPurpose.PASSWORD,
+        caps_lock_warning = true
+      };
+
+      var login_button = new Button.with_label (_("Login")) {
+        sensitive = false
+      };
+      username.changed.connect (() => {
+        login_button.sensitive = (String.is_empty(username.text, true)  == false) && (String.is_empty(password.text, true) == false);
+      });
+      password.changed.connect (() => {
+        login_button.sensitive = (String.is_empty(username.text, true)  == false) && (String.is_empty(password.text, true) == false);
+      });
+      login_button.get_style_context ().add_class (Gtk.STYLE_CLASS_SUGGESTED_ACTION);
+      login_button.clicked.connect (() => {
+        if (String.is_empty(username.text, true) || String.is_empty(password.text, true)) return;
+        // TODO: Login to Pandora
+        view_stack.visible_child_name = "player";
+      });
+
+      var login_label = new Label (_("Login to Pandora"));
+      login_label.get_style_context ().add_class (Granite.STYLE_CLASS_H1_LABEL);
+      login.attach (login_label, 0, 0, 3, 1);
+      login.attach (username, 0, 1, 3, 1);
+      login.attach (password, 0, 2, 3, 1);
+      login.attach (login_button, 2, 3, 1, 1);
+
+      welcome = new Granite.Widgets.Welcome ("", "");
+      welcome.activated.connect ((_) => {
+        if (player.authenticated && player.stations.size == 0) {
+          // TODO: Show the new station dialog
+        } else {
+          view_stack.visible_child_name = "login";
+          username.grab_focus ();
+        }
+      });
+
+      var sidebar_grid = new Gtk.Grid () {
+        orientation = Gtk.Orientation.VERTICAL
+      };
+      sidebar_grid.get_style_context ().add_class (Gtk.STYLE_CLASS_SIDEBAR);
+      sidebar_grid.add (source_list_view = new Widgets.SourceListView ());
+      sidebar_grid.add (statusbar = new Widgets.StatusBar ());
+
+      var track_view = new Grid () {
+        halign = Align.CENTER,
+        valign = Align.CENTER
+      };
+      var like_button = new Gtk.Button.from_icon_name ("emblem-favorite-symbolic", Gtk.IconSize.SMALL_TOOLBAR) {
+        action_name = ACTION_PREFIX + ACTION_LIKE,
+        tooltip_text = _("Like this song")
+      };
+      var explain_button = new Gtk.Button.from_icon_name ("dialog-question-symbolic", Gtk.IconSize.SMALL_TOOLBAR) {
+        action_name = ACTION_PREFIX + ACTION_EXPLAIN,
+        tooltip_text = _("Explain this song")
+      };
+      track_view.attach (like_button, 0, 0, 1, 1);
+      track_view.attach (explain_button, 3, 0, 1, 1);
+      track_view.attach (new Label (_("Current Track")) {
+        hexpand = true,
+        justify = Justification.CENTER,
+        ellipsize = Pango.EllipsizeMode.END
+      }, 1, 0, 2, 1);
+      track_view.attach (new Image (), 1, 1, 2, 2);
+
+      var player_view = new Gtk.Paned (Gtk.Orientation.HORIZONTAL);
+      player_view.pack1 (sidebar_grid, false, false);
+      player_view.pack2 (track_view, true, false);
+      player_view.show_all ();
+
+      view_stack.add_named (welcome, "welcome");
+      view_stack.add_named (login, "login");
+      view_stack.add_named (player_view, "player");
+
+      update_welcome ();
+
+      var app = new Box (Orientation.VERTICAL, 0);
+      app.pack_start (header);
+      app.pack_end (view_stack);
+
+      main_window.add (app);
+      main_window.show_all ();
+    }
+
+    public static int main (string[] args) {
+      stdout.printf ("Sing it, Apollo!\n");
+      return new App ().run (args);
+    }
+
+    public static void create_new_station () {
+      // TODO: Create and show a station editor dialog
+    }
+
+    private void update_welcome () {
+      welcome.remove_item (0);
+      if (player.authenticated == false) {
+        welcome.title = _("Login to Pandora");
+        welcome.subtitle = _("Login to start playing music.");
+        welcome.append ("contact-new", _("Login to Pandora"), _("Login with your pandora.com credentials."));
+        view_stack.visible_child_name = "welcome";
+      } else if (player.stations.size == 0) {
+        welcome.title = _("No Stations Created");
+        welcome.subtitle = _("Create a new station to start playing music.");
+        welcome.append ("list-add", _("Create a Station"), _("Granite's source code is hosted on GitHub."));
+        view_stack.visible_child_name = "welcome";
+      } else if (player.authenticated && player.stations.size > 0) {
+        view_stack.visible_child_name = "player";
+      }
+    }
   }
 }

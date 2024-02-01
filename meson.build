@@ -69,7 +69,10 @@ exe = executable(
   'src/Utils/Search.vala',
   'src/Utils/String.vala',
   'src/Utils/TimeUtils.vala',
+  'src/Widgets/SourceListView.vala',
+  'src/Widgets/StatusBar.vala',
   'src/Widgets/TopDisplay.vala',
+  'src/Widgets/ViewSelector.vala',
   dependencies: deps,
   install: true
 )

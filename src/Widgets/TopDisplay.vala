@@ -27,7 +27,7 @@
  *              Chance Snow <git@chancesnow.me>
  */
 
-public class Apollo.TopDisplay : Gtk.Stack {
+public class Apollo.Widgets.TopDisplay : Gtk.Stack {
   // public MusicListView list_view { get; set; }
 
   public signal void scale_value_changed (Gtk.ScrollType scroll, double val);

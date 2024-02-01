@@ -49,6 +49,23 @@
       <summary>Stations category expander</summary>
       <description>Expand/Collapse Stations category</description>
     </key>
+    <key type="i" name="minimum-sidebar-width">
+      <default>192</default>
+      <summary>Minimum width of the side pane</summary>
+      <description>The minimum width of the side pane</description>
+    </key>
+    <key type="b" name="autostart">
+      <default>true</default>
+      <summary>Whether to play most recent the station on startup</summary>
+      <description>Whether to play most recent the station on startup</description>
+    </key>
+    <key type="s" name="autostart-station">
+      <default>''</default>
+      <summary>Most recent the station to play on startup</summary>
+      <description>Most recent the station to play on startup</description>
+    </key>
+  </schema>
+  <schema path="/@GSETTINGS_KEY@/preferences/" id="@EXEC_NAME@.saved-state">
     <key name="window-position" type="(ii)">
       <default>(-1, -1)</default>
       <summary>Window position</summary>
@@ -64,30 +81,15 @@
       <summary>Window state</summary>
       <description>State of last closed window (Normal, tiled left, or tiled right).</description>
     </key>
-    <key type="i" name="sidebar-width">
-      <default>191</default>
-      <summary>Width of the side pane</summary>
-      <description>The default width of the side pane on startup</description>
-    </key>
-    <key type="i" name="minimum-sidebar-width">
-      <default>96</default>
-      <summary>Minimum width of the side pane</summary>
-      <description>The minimum width of the side pane</description>
-    </key>
-    <key type="b" name="autostart">
-      <default>true</default>
-      <summary>Whether to play most recent the station on startup</summary>
-      <description>Whether to play most recent the station on startup</description>
-    </key>
-    <key type="s" name="autostart-station">
-      <default>''</default>
-      <summary>Most recent the station to play on startup</summary>
-      <description>Most recent the station to play on startup</description>
-    </key>
     <key type="i" name="active-tab">
       <default>0</default>
       <summary>Which tab to activate on startup</summary>
       <description>Which tab to activate on startup</description>
+    </key>
+    <key type="i" name="sidebar-width">
+      <default>191</default>
+      <summary>Width of the side pane</summary>
+      <description>The default width of the side pane on startup</description>
     </key>
   </schema>
 
